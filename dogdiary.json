@@ -1,0 +1,26 @@
+{
+  "name": "Dog Diary",
+  "short_name": "DD",
+  "description": "A simple app to track your dog's activities and events.",
+  "start_url": "./",
+  "scope": ".",
+  "theme_color": "#eeffee",
+  "background_color": "#eeffee",
+  "display": "standalone",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "48x48"
+    },
+    {
+      "src": "icons/icon-maskable-192.png",
+      "sizes": "192x192",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "purpose": "maskable"
+    }
+  ]
+}

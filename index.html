@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en-US">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width" />
+  <title>Dog Diary</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="manifest" href="dogdiary.json" />
+</head>
+
+<body>
+  <h1>Dog Diary</h1>
+  <section id="calendar">
+    TODO
+  </section>
+
+  <section id="day">
+  </section>
+
+  <script src="app.js" defer></script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("sw.js").then(
+        (registration) => {
+          console.log("Service worker registration successful:", registration);
+        },
+        (error) => {
+          console.error(`Service worker registration failed: ${error}`);
+        },
+      );
+    } else {
+      console.error("Service workers are not supported.");
+    }
+  </script>
+</body>
+
+</html>
