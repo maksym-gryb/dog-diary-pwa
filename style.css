@@ -33,10 +33,22 @@ li:nth-of-type(even) {
 .calendar-date:hover {
   cursor: pointer;
   background-color: #445544;
+  color:#ccffcc;
 }
 
 .calendar-date-today {
-  background-color: bisque;
+  background-color: #336633;
+  /* color: #002200; */
+}
+
+.calendar-date-selected {
+  background-color: #deb887;
+  color: black;
+}
+
+.calendar-date-selected:hover {
+  background-color: #eec897;
+  color: black;
 }
 
 #day > .slot {
@@ -45,4 +57,51 @@ li:nth-of-type(even) {
 
 #day > .slot:not(:last-child) {
   border-bottom: 2px solid black;
+}
+
+.slot:hover {
+  cursor: pointer;
+  background-color: #445544;
+}
+
+.slot > .activity_checkbox:not(.checked) {
+  display: none;
+}
+
+.slot > .activity_checkbox .checked {
+  display: inline-flex;
+}
+
+.slot.slot_select > .activity_checkbox {
+  display: inline-flex;
+}
+
+#loginForm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 300px;
+  margin: 2rem auto;
+}
+
+#loginForm input,
+#loginForm button {
+  padding: 0.75rem;
+  font-size: 1rem;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #ddd;
+  border-top: 4px solid #333;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: auto;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }

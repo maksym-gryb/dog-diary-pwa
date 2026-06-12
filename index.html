@@ -7,18 +7,41 @@
   <title>Dog Diary</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="manifest" href="dogdiary.json" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 
 <body>
   <h1>Dog Diary</h1>
-  <section id="calendar">
-    TODO
-  </section>
 
-  <section id="day">
-  </section>
+  <section id="login_section">
+    <div id="loginForm">
+      <label for="email">Email</label>
+      <input
+        type="email"
+        id="email"
+        placeholder="Enter your email"
+        autocomplete="email"
+        required
+      >
 
-  <script src="app.js" defer></script>
+      <label for="password">Password</label>
+      <input
+        type="password"
+        id="password"
+        placeholder="Enter your password"
+        autocomplete="current-password"
+        required
+      >
+
+      <button id="loginBtn" type="button">
+        Sign In
+      </button>
+    </div>
+  </section>
+  <section id="calendar"> </section>
+  <section id="day"> </section>
+
+  <script type="module" src="app.js" defer></script>
   <script>
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("sw.js").then(
