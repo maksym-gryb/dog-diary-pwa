@@ -1,6 +1,7 @@
 const login_section = document.getElementById("login_section");
 const calendar = document.getElementById("calendar");
 const day = document.getElementById("day");
+const sync_status = document.getElementById("sync-status");
 
 const project = "dog-diary-pwa";
 const dbname = "diary";
@@ -40,7 +41,7 @@ function createIcon(activityType) {
   icon.classList.add("fa-solid");
 
   let t = activityType;
-  if(!activities.includes(t)) {
+  if (!activities.includes(t)) {
     t = LegacyActivityMap[t]
   }
 
@@ -57,9 +58,9 @@ let data_set = []
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
 // import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-analytics.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
-import { 
+import {
   collection,
   query,
   where,
@@ -69,7 +70,7 @@ import {
   deleteDoc,
   onSnapshot
 } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
-import { 
+import {
   getAuth,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -101,7 +102,16 @@ function listenByDate(db, queryDate) {
     where("date", "==", queryDate)
   );
 
-  unsubscribe = onSnapshot(q, (snapshot) => {
+  unsubscribe = onSnapshot(q, { includeMetadataChanges: true }, (snapshot) => {
+
+    if (snapshot.metadata.hasPendingWrites) {
+      syncStatus.textContent = "Saving...";
+    } else if (snapshot.metadata.fromCache) {
+      syncStatus.textContent = "Offline / Cached";
+    } else {
+      syncStatus.textContent = "Synced";
+    }
+
     const entries = snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
@@ -148,7 +158,14 @@ await setPersistence(auth, browserLocalPersistence);
 
 // const analytics = getAnalytics(app);
 
-const db = getFirestore(app)
+const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({
+    tabManager: persistentMultipleTabManager()
+  })
+});
+
+
+// const db = getFirestore(app)
 
 // let db;
 // const request = indexedDB.open(dbname);
@@ -195,7 +212,7 @@ function renderCalendar(month, year) {
     let thisDay = new Date(year, month);
     thisDay.setDate(thisDay.getDate() + i - firstDayOfMonth)
     const d = thisDay.getDate();
-    
+
     const isCurrentDay =
       currentYear == thisDay.getFullYear() && currentMonth == thisDay.getMonth() && currentDay == thisDay.getDate();
 
@@ -210,7 +227,7 @@ function renderCalendar(month, year) {
     e.id = d_str;
     e.textContent = d;
     e.classList.add("calendar-date");
-    if(isCurrentDay) {
+    if (isCurrentDay) {
       e.classList.add("calendar-date-today");
     }
     e.onclick = function () { listenByDate(db, d_str) };
@@ -221,17 +238,8 @@ function renderCalendar(month, year) {
 async function renderDay(renderDate, all_data) {
   day.textContent = "";
 
-  // const all_data = await loadToday();
-
-  // const store = db.transaction(storename, "readonly").objectStore(storename);
-  // const index = store.index("date");
-
-  // const keyRange = IDBKeyRange.only(renderDate);
-  // const query = index.getAll(keyRange);
-
-
   // query.onsuccess = () => {
-  for (let i = 0; i < 48; i++) {
+  for (let i = 0; i < 24 * 2; i++) {
     const timeslot = `${leftPad(Math.floor(i / 2).toString())}:${leftPad((i % 2 * 30).toString())}`;
 
     const slot_data = all_data.filter(l => l.time == timeslot)
@@ -269,6 +277,9 @@ async function renderDay(renderDate, all_data) {
     day.appendChild(e);
   }
 
+  const now = Date();
+  now.toString
+
   // window.location.hash = "";
   // window.location.hash = "#10_30";
   // }
@@ -278,11 +289,11 @@ async function toggleActivity(timeslot, date, activity) {
   try {
     let existingData = [];
     if (data_set.length > 0) {
-      existingData = data_set.filter(x => 
+      existingData = data_set.filter(x =>
         x.time == timeslot && x.date == date && x.activity == activity);
     }
 
-    if(existingData && existingData.length > 0) {
+    if (existingData && existingData.length > 0) {
       await Promise.all(
         existingData.map(d => deleteDoc(doc(db, storename, d.id)))
       );
@@ -296,7 +307,7 @@ async function toggleActivity(timeslot, date, activity) {
         creator: auth.currentUser.uid
       });
 
-    console.log("Saved with ID:", docRef.id);
+      console.log("Saved with ID:", docRef.id);
     }
   } catch (e) {
     console.error("Error adding document:", e);
@@ -311,7 +322,7 @@ function revealSlotOptions(slot_id) {
 
   let isReSelected = false;
   for (const l of olds) {
-    if(l.id == slot.id) {
+    if (l.id == slot.id) {
       isReSelected = true;
       break;
     }
@@ -321,17 +332,9 @@ function revealSlotOptions(slot_id) {
     olds[0].classList.remove("slot_select")
   }
 
-  if(!isReSelected) {
+  if (!isReSelected) {
     slot.classList.add("slot_select")
   }
-}
-
-/**
-* @param {string} i - input
-*/
-function leftPad(i) {
-  if (i.length == 2) return i;
-  return "0" + i;
 }
 
 // Login button
@@ -357,81 +360,25 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
+/**
+* @param {string} i - input
+*/
+function leftPad(i) {
+  if (i.length == 2) return i;
+  return "0" + i;
+}
 
+function roundToNearestHalfHour(date) {
+  const d = new Date(date);
 
-// if(login()){
-//   renderCalendar(currentMonth, currentYear);
-// }
+  const minutes = d.getMinutes();
+  const hour = d.getHours();
+  if (minutes == 0 || minutes == 30)
+    return [`${leftPad(hour)}:${leftPad(minutes)}`]
 
+  const roundedMinutes = Math.round(minutes / 30) * 30;
 
-// const newPeriodFormEl = document.getElementsByTagName("form")[0];
-// const startDateInputEl = document.getElementById("start-date");
-// const endDateInputEl = document.getElementById("end-date");
-// const pastPeriodContainer = document.getElementById("past-periods");
+  d.setMinutes(roundedMinutes, 0, 0);
 
-// // Add the storage key as an app-wide constant
-// const STORAGE_KEY = "dog-diary";
-
-// // Listen to form submissions.
-// newPeriodFormEl.addEventListener("submit", (event) => {
-//   event.preventDefault();
-//   const startDate = startDateInputEl.value;
-//   const endDate = endDateInputEl.value;
-//   if (checkDatesInvalid(startDate, endDate)) {
-//     return;
-//   }
-//   storeNewPeriod(startDate, endDate);
-//   renderPastPeriods();
-//   newPeriodFormEl.reset();
-// });
-
-// function checkDatesInvalid(startDate, endDate) {
-//   if (!startDate || !endDate || startDate > endDate) {
-//     newPeriodFormEl.reset();
-//     return true;
-//   }
-//   return false;
-// }
-
-// function storeNewPeriod(startDate, endDate) {
-//   const periods = getAllStoredPeriods();
-//   periods.push({ startDate, endDate });
-//   periods.sort((a, b) => new Date(b.startDate) - new Date(a.startDate));
-//   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(periods));
-// }
-
-// function getAllStoredPeriods() {
-//   const data = window.localStorage.getItem(STORAGE_KEY);
-//   const periods = data ? JSON.parse(data) : [];
-//   console.dir(periods);
-//   console.log(periods);
-//   return periods;
-// }
-
-// function renderPastPeriods() {
-//   const pastPeriodHeader = document.createElement("h2");
-//   const pastPeriodList = document.createElement("ul");
-//   const periods = getAllStoredPeriods();
-//   if (periods.length === 0) {
-//     return;
-//   }
-//   pastPeriodContainer.textContent = "";
-//   pastPeriodHeader.textContent = "Past periods";
-//   periods.forEach((period) => {
-//     const periodEl = document.createElement("li");
-//     periodEl.textContent = `From ${formatDate(
-//       period.startDate,
-//     )} to ${formatDate(period.endDate)}`;
-//     pastPeriodList.appendChild(periodEl);
-//   });
-
-//   pastPeriodContainer.appendChild(pastPeriodHeader);
-//   pastPeriodContainer.appendChild(pastPeriodList);
-// }
-
-// function formatDate(dateString) {
-//   const date = new Date(dateString);
-//   return date.toLocaleDateString("en-US", { timeZone: "UTC" });
-// }
-
-// renderPastPeriods();
+  return d;
+}
