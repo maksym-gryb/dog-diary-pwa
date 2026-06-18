@@ -11,7 +11,8 @@ const APP_STATIC_RESOURCES = [
   "./app.js",
   "./style.css",
   "./icons/icon-maskable-512.png",
-  "./favicon.ico"
+  "./favicon.ico",
+  "./vendor/qrcodejs/qrcode.min.js"
 ];
 
 // On install, cache the static resources
